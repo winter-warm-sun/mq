@@ -1,7 +1,11 @@
 package com.example.mq.mqserver.core;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
 
+import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,4 +26,42 @@ public class Exchange {
     // arguments 表示的是创建交换机时指定的一些额外的参数选项，后续代码中并没有真的实现对应的功能, 先列出来. (RabbitMQ 也是有的)
     // 为了把这个 arguments 存到数据库中, 就需要把 Map 转成 json 格式的字符串.
     private Map<String,Object> arguments=new HashMap<>();
+
+    // 这里的 get set 用于和数据库交互使用
+    public String getArguments() {
+        // 是把当前的 arguments参数，从 Map 转成 String(JSON)
+        ObjectMapper objectMapper=new ObjectMapper();
+        try {
+            objectMapper.writeValueAsString(arguments);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        // 如果代码异常了，返回一个空的json字符串
+        return "{}";
+    }
+
+    // 从数据库读数据之后，构造 Exchange对象，会自动调用到
+    public void setArguments(String argumentsJson) {
+        // 把参数中的 argumentsJson 按照 JSON格式解析，转成上述的 Map对象
+        ObjectMapper objectMapper=new ObjectMapper();
+        try {
+            this.arguments=objectMapper.readValue(argumentsJson, new TypeReference<HashMap<String, Object>>() {});
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // 在这里针对 arguments,再提供一组 getter setter,用来去更方便的获取/设置这里的键值对
+    // 这一组在Java代码内部使用 （比如测试的时候）
+    public Object getArguments(String key) {
+        return arguments.get(key);
+    }
+
+    public void setArguments(String key,Object value) {
+        arguments.put(key,value);
+    }
+
+    public void setArguments(Map<String,Object> arguments) {
+        this.arguments=arguments;
+    }
 }
