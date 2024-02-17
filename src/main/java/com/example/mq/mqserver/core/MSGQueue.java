@@ -1,5 +1,7 @@
 package com.example.mq.mqserver.core;
 
+import lombok.Data;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,6 +10,7 @@ import java.util.Map;
  * 这个类表示一个存储消息的队列
  * MSG => Message
  */
+@Data
 public class MSGQueue {
     // 表示队列的身份标识
     private String name;
@@ -21,36 +24,4 @@ public class MSGQueue {
     private boolean autoDelete=false;
     // 也是表示扩展参数，当前也是先列在这里，先暂时不实现
     private Map<String,Object> arguments=new HashMap<>();
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public boolean isDurable() {
-        return durable;
-    }
-
-    public void setDurable(boolean durable) {
-        this.durable = durable;
-    }
-
-    public boolean isExclusive() {
-        return exclusive;
-    }
-
-    public void setExclusive(boolean exclusive) {
-        this.exclusive = exclusive;
-    }
-
-    public boolean isAutoDelete() {
-        return autoDelete;
-    }
-
-    public void setAutoDelete(boolean autoDelete) {
-        this.autoDelete = autoDelete;
-    }
 }
