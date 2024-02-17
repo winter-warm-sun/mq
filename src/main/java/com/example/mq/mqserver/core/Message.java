@@ -1,5 +1,7 @@
 package com.example.mq.mqserver.core;
 
+import lombok.Data;
+
 import java.io.Serializable;
 import java.util.UUID;
 
@@ -9,6 +11,7 @@ import java.util.UUID;
  * 此时就需要针对 Message 进行序列化和反序列化
  * 此处使用标准库自带的 序列化/反序列化 操作
  */
+@Data
 public class Message implements Serializable {
     // 这两个属性是 Message 最核心的部分
     private BasicProperties basicProperties=new BasicProperties();
@@ -67,43 +70,4 @@ public class Message implements Serializable {
         basicProperties.setDeliverMode(mode);
     }
 
-    public BasicProperties getBasicProperties() {
-        return basicProperties;
-    }
-
-    public void setBasicProperties(BasicProperties basicProperties) {
-        this.basicProperties = basicProperties;
-    }
-
-    public byte[] getBody() {
-        return body;
-    }
-
-    public void setBody(byte[] body) {
-        this.body = body;
-    }
-
-    public long getOffsetBeg() {
-        return offsetBeg;
-    }
-
-    public void setOffsetBeg(long offsetBeg) {
-        this.offsetBeg = offsetBeg;
-    }
-
-    public long getOffsetEnd() {
-        return offsetEnd;
-    }
-
-    public void setOffsetEnd(long offsetEnd) {
-        this.offsetEnd = offsetEnd;
-    }
-
-    public byte getIsValid() {
-        return isValid;
-    }
-
-    public void setIsValid(byte isValid) {
-        this.isValid = isValid;
-    }
 }

@@ -1,11 +1,18 @@
 package com.example.mq.mqserver.core;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Data;
+
+import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
 /*
 * 这个类表示一个交换机
  */
+@Data
 public class Exchange {
     // 此处使用 name 来作为交换机的身份标识 （唯一的）
     private String name;
@@ -20,37 +27,41 @@ public class Exchange {
     // 为了把这个 arguments 存到数据库中, 就需要把 Map 转成 json 格式的字符串.
     private Map<String,Object> arguments=new HashMap<>();
 
-
-    public String getName() {
-        return name;
+    // 这里的 get set 用于和数据库交互使用
+    public String getArguments() {
+        // 是把当前的 arguments参数，从 Map 转成 String(JSON)
+        ObjectMapper objectMapper=new ObjectMapper();
+        try {
+            objectMapper.writeValueAsString(arguments);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        // 如果代码异常了，返回一个空的json字符串
+        return "{}";
     }
 
-    public void setName(String name) {
-        this.name = name;
+    // 从数据库读数据之后，构造 Exchange对象，会自动调用到
+    public void setArguments(String argumentsJson) {
+        // 把参数中的 argumentsJson 按照 JSON格式解析，转成上述的 Map对象
+        ObjectMapper objectMapper=new ObjectMapper();
+        try {
+            this.arguments=objectMapper.readValue(argumentsJson, new TypeReference<HashMap<String, Object>>() {});
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
     }
 
-    public ExchangeType getType() {
-        return type;
+    // 在这里针对 arguments,再提供一组 getter setter,用来去更方便的获取/设置这里的键值对
+    // 这一组在Java代码内部使用 （比如测试的时候）
+    public Object getArguments(String key) {
+        return arguments.get(key);
     }
 
-    public void setType(ExchangeType type) {
-        this.type = type;
+    public void setArguments(String key,Object value) {
+        arguments.put(key,value);
     }
 
-    public boolean isDurable() {
-        return durable;
+    public void setArguments(Map<String,Object> arguments) {
+        this.arguments=arguments;
     }
-
-    public void setDurable(boolean durable) {
-        this.durable = durable;
-    }
-
-    public boolean isAutoDelete() {
-        return autoDelete;
-    }
-
-    public void setAutoDelete(boolean autoDelete) {
-        this.autoDelete = autoDelete;
-    }
-
 }
