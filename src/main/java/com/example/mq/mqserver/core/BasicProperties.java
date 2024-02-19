@@ -1,7 +1,10 @@
 package com.example.mq.mqserver.core;
 
+import lombok.Data;
+
 import java.io.Serializable;
 
+@Data
 public class BasicProperties implements Serializable {
     // 消息的唯一身份标识. 此处为了保证 id 的唯一性, 使用 UUID 来作为 message id
     private String messageId;
@@ -14,38 +17,4 @@ public class BasicProperties implements Serializable {
     private int deliverMode = 1;
 
     // 其实针对 RabbitMQ 来说, BasicProperties 里面还有很多别的属性. 其他的属性暂时先不考虑了.
-
-
-    public String getMessageId() {
-        return messageId;
-    }
-
-    public void setMessageId(String messageId) {
-        this.messageId = messageId;
-    }
-
-    public String getRoutingKey() {
-        return routingKey;
-    }
-
-    public void setRoutingKey(String routingKey) {
-        this.routingKey = routingKey;
-    }
-
-    public int getDeliverMode() {
-        return deliverMode;
-    }
-
-    public void setDeliverMode(int deliverMode) {
-        this.deliverMode = deliverMode;
-    }
-
-    @Override
-    public String toString() {
-        return "BasicProperties{" +
-                "messageId='" + messageId + '\'' +
-                ", routingKey='" + routingKey + '\'' +
-                ", deliverMode=" + deliverMode +
-                '}';
-    }
 }

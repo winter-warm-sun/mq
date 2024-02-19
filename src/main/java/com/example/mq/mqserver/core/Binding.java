@@ -1,8 +1,11 @@
 package com.example.mq.mqserver.core;
 
+import lombok.Data;
+
 /*
  * 表示队列和交换机之间的关联关系
  */
+@Data
 public class Binding {
     private String exchangeName;
     private String queueName;
@@ -13,28 +16,4 @@ public class Binding {
     // 比如, 对于持久化来说, 如果 Exchange 和 Queue 任何一个都没有持久化,
     // 此时你针对 Binding 持久化是没有任何意义的
 
-
-    public String getExchangeName() {
-        return exchangeName;
-    }
-
-    public void setExchangeName(String exchangeName) {
-        this.exchangeName = exchangeName;
-    }
-
-    public String getQueueName() {
-        return queueName;
-    }
-
-    public void setQueueName(String queueName) {
-        this.queueName = queueName;
-    }
-
-    public String getBindingKey() {
-        return bindingKey;
-    }
-
-    public void setBindingKey(String bindingKey) {
-        this.bindingKey = bindingKey;
-    }
 }
