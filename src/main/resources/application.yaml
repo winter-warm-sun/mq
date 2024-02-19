@@ -1,0 +1,12 @@
+spring:
+  datasource:
+    url: jdbc:sqlite:./data/meta.db
+    username:
+    password:
+    driver-class-name: org.sqlite.JDBC
+
+mybatis:
+  mapper-locations: classpath:mapper/**Mapper.xml
+
+server:
+  port: 8090
