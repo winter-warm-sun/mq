@@ -8,7 +8,7 @@ public enum ExchangeType {
     private final int type;
 
     private ExchangeType(int type) {
-        this.type=type;
+        this.type = type;
     }
 
     public int getType() {

@@ -1,37 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<!-- namespace 要设置是实现接口的具体包名加接口名 -->
 <mapper namespace="com.example.mq.mqserver.mapper.MetaMapper">
     <update id="createExchangeTable">
         create table if not exists exchange (
-            name varchar (50) primary key ,
+            name varchar(50) primary key,
             type int,
             durable boolean,
             autoDelete boolean,
-            arguments varchar (1024)
-        );
+            arguments varchar(1024)
+            );
     </update>
 
     <update id="createQueueTable">
         create table if not exists queue (
-            name varchar (50) primary key,
+            name varchar(50) primary key,
             durable boolean,
             exclusive boolean,
             autoDelete boolean,
-            arguments varchar (1024)
-        )
+            arguments varchar(1024)
+            );
     </update>
 
     <update id="createBindingTable">
         create table if not exists binding (
-            exchangeName varchar (50),
-            queueName varchar (50),
-            bindingKey varchar (256)
-        );
+            exchangeName varchar(50),
+            queueName varchar(50),
+            bindingKey varchar(256)
+            );
     </update>
 
     <insert id="insertExchange" parameterType="com.example.mq.mqserver.core.Exchange">
-        insert into exchange values (#{name},#{type},#{durable},#{autoDelete},#{arguments});
+        insert into exchange values(#{name}, #{type}, #{durable}, #{autoDelete}, #{arguments});
     </insert>
 
     <select id="selectAllExchanges" resultType="com.example.mq.mqserver.core.Exchange">
@@ -39,23 +38,23 @@
     </select>
 
     <delete id="deleteExchange" parameterType="java.lang.String">
-        delete from exchange where name=#{exchangeName};
+        delete from exchange where name = #{exchangeName};
     </delete>
 
     <insert id="insertQueue" parameterType="com.example.mq.mqserver.core.MSGQueue">
-        insert into queue values(#{name},#{durable},#{exclusive},#{autoDelete},#{arguments});
+        insert into queue values(#{name}, #{durable}, #{exclusive}, #{autoDelete}, #{arguments});
     </insert>
 
-    <select id="selectAllQueue" resultType="com.example.mq.mqserver.core.MSGQueue">
+    <select id="selectAllQueues" resultType="com.example.mq.mqserver.core.MSGQueue">
         select * from queue;
     </select>
 
     <delete id="deleteQueue" parameterType="java.lang.String">
-        delete from queue where name =#{queueName};
+        delete from queue where name = #{queueName};
     </delete>
 
     <insert id="insertBinding" parameterType="com.example.mq.mqserver.core.Binding">
-        insert into binding values (#{exchangeName},#{queueName},#{bindingKey});
+        insert into binding values(#{exchangeName}, #{queueName}, #{bindingKey});
     </insert>
 
     <select id="selectAllBindings" resultType="com.example.mq.mqserver.core.Binding">
@@ -63,6 +62,6 @@
     </select>
 
     <delete id="deleteBinding" parameterType="com.example.mq.mqserver.core.Binding">
-        delete from binding where exchangeName=#{exchangeName} and queueName=#{queueName}
+        delete from binding where exchangeName = #{exchangeName} and queueName = #{queueName};
     </delete>
 </mapper>
