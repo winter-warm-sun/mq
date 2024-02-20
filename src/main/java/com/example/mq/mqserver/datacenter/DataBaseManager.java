@@ -41,6 +41,22 @@ public class DataBaseManager {
     }
 
     public void deleteDB() {
+        File file=new File("./data/meta.db");
+        boolean ret=file.delete();
+        if(ret) {
+            log.info("[DatabaseManger] 删除数据库文件成功！");
+        } else {
+            log.info("[DatabaseManger] 删除数据库文件失败！");
+        }
+
+        File dataDir=new File("./data");
+        // 使用 delete 删除目录的时候，需要保证目录是空的
+        ret=dataDir.delete();
+        if(ret) {
+            log.info("[DatabaseManger] 删除数据库目录成功！");
+        } else {
+            log.info("[DatabaseManger] 删除数据库目录失败！");
+        }
     }
 
     private boolean checkDBExists() {
