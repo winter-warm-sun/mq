@@ -14,7 +14,7 @@ import java.util.Map;
 @Data
 public class Exchange {
     // 此处使用 name 来作为交换机的身份标识. (唯一的)
-    private String name;
+    private String name ;
     // 交换机类型, DIRECT, FANOUT, TOPIC
     private ExchangeType type = ExchangeType.DIRECT;
     // 该交换机是否要持久化存储. true 表示需要持久化; false 表示不必持久化.

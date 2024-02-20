@@ -5,6 +5,7 @@ import com.example.mq.mqserver.core.Exchange;
 import com.example.mq.mqserver.core.ExchangeType;
 import com.example.mq.mqserver.core.MSGQueue;
 import com.example.mq.mqserver.datacenter.DataBaseManager;
+import org.apache.ibatis.annotations.Param;
 import org.junit.jupiter.api.*;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -67,5 +68,112 @@ public class DataBaseManagerTests {
         exchange.setArguments("aaa",1);
         exchange.setArguments("bbb",2);
         return exchange;
+    }
+
+    @Test
+    public void testInsertExchange() {
+        // 构造一个 Exchange 对象，插入到数据库中，再查询出来，看结果是否符合预期
+        Exchange exchange=createTestExchange("testExchange");
+        dataBaseManager.insertExchange(exchange);
+        // 插入完成后 查询结果
+        List<Exchange> exchangeList=dataBaseManager.selectAllExchanges();
+        Assertions.assertEquals(2,exchangeList.size());
+        Exchange newExchange=exchangeList.get(1);
+        Assertions.assertEquals("testExchange",newExchange.getName());
+        Assertions.assertEquals(ExchangeType.FANOUT,newExchange.getType());
+        Assertions.assertEquals(false,newExchange.isAutoDelete());
+        Assertions.assertEquals(true,newExchange.isDurable());
+        Assertions.assertEquals(1,newExchange.getArguments("aaa"));
+        Assertions.assertEquals(2,newExchange.getArguments("bbb"));
+    }
+
+    @Test
+    public void testDeleteExchange() {
+        // 先构造一个交换机，插入数据库；然后再按照名字删除即可！
+        Exchange exchange=createTestExchange("testExchange");
+        dataBaseManager.insertExchange(exchange);
+        List<Exchange> exchangeList=dataBaseManager.selectAllExchanges();
+        Assertions.assertEquals(2,exchangeList.size());
+        Assertions.assertEquals("testExchange",exchangeList.get(1).getName());
+
+        // 进行删除操作
+        dataBaseManager.deleteExchange("testExchange");
+        // 再次查询
+        exchangeList=dataBaseManager.selectAllExchanges();
+        Assertions.assertEquals(1,exchangeList.size());
+        Assertions.assertEquals("",exchangeList.get(0).getName());
+    }
+
+    private MSGQueue createTestQueue(String queueName) {
+        MSGQueue queue=new MSGQueue();
+        queue.setName(queueName);
+        queue.setDurable(true);
+        queue.setAutoDelete(false);
+        queue.setExclusive(false);
+        queue.setArguments("aaa",1);
+        queue.setArguments("bbb",2);
+        return queue;
+    }
+
+    @Test
+    public void testInsertQueue() {
+        MSGQueue queue=createTestQueue("testQueue");
+        dataBaseManager.insertQueue(queue);
+
+        List<MSGQueue> queueList=dataBaseManager.selectAllQueues();
+
+        Assertions.assertEquals(1,queueList.size());
+        MSGQueue newQueue=queueList.get(0);
+        Assertions.assertEquals("testQueue",newQueue.getName());
+        Assertions.assertEquals(true, newQueue.isDurable());
+        Assertions.assertEquals(false, newQueue.isAutoDelete());
+        Assertions.assertEquals(false, newQueue.isExclusive());
+        Assertions.assertEquals(1, newQueue.getArguments("aaa"));
+        Assertions.assertEquals(2, newQueue.getArguments("bbb"));
+    }
+
+    @Test
+    public void testDeleteQueue() {
+        MSGQueue queue=createTestQueue("testQueue");
+        dataBaseManager.insertQueue(queue);
+        List<MSGQueue> queueList=dataBaseManager.selectAllQueues();
+        Assertions.assertEquals(1,queueList.size());
+        // 进行删除
+        dataBaseManager.deleteQueue("testQueue");
+        queueList=dataBaseManager.selectAllQueues();
+        Assertions.assertEquals(0,queueList.size());
+    }
+
+    private Binding createTestBinding(String exchangeName,String queueName) {
+        Binding binding=new Binding();
+        binding.setExchangeName(exchangeName);
+        binding.setQueueName(queueName);
+        binding.setBindingKey("testBindingKey");
+        return binding;
+    }
+
+    @Test
+    public void testInsertBinding() {
+        Binding binding=createTestBinding("testExchange","testQueue");
+        dataBaseManager.insertBinding(binding);
+
+        List<Binding> bindingList=dataBaseManager.selectAllBindings();
+        Assertions.assertEquals(1,bindingList.size());
+        Assertions.assertEquals("testExchange",bindingList.get(0).getExchangeName());
+        Assertions.assertEquals("testQueue",bindingList.get(0).getQueueName());
+        Assertions.assertEquals("testBindingKey",bindingList.get(0).getBindingKey());
+    }
+
+    @Test
+    public void testDeleteBinding() {
+        Binding binding=createTestBinding("testExchange","testQueue");
+        dataBaseManager.insertBinding(binding);
+        List<Binding> bindingList=dataBaseManager.selectAllBindings();
+        Assertions.assertEquals(1,bindingList.size());
+
+        // 删除
+        dataBaseManager.deleteBinding(binding);
+        bindingList=dataBaseManager.selectAllBindings();
+        Assertions.assertEquals(0,bindingList.size());
     }
 }
