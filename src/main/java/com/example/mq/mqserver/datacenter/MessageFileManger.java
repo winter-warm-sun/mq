@@ -154,7 +154,7 @@ public class MessageFileManger {
             message.setOffsetBeg(queueDataFile.length()+4);
             message.setOffsetEnd(queueDataFile.length()+4+messageBinary.length);
             // 4. 写入消息到数据文件，注意是追加写入到数据文件末尾
-            try(OutputStream outputStream=new FileOutputStream(queueDataFile)) {
+            try(OutputStream outputStream=new FileOutputStream(queueDataFile,true)) {
                 try (DataOutputStream dataOutputStream=new DataOutputStream(outputStream)){
                     // 写入当前消息的长度，占据四个字节
                     dataOutputStream.writeInt(messageBinary.length);
