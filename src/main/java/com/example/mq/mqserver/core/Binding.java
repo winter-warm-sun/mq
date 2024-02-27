@@ -9,7 +9,7 @@ import lombok.Data;
 public class Binding {
     private String exchangeName;
     private String queueName;
-    // bindingKey：队列上的字符串，用于和 Message 的routingKey 做匹配
+    // 用于和 Message 的routingKey 做匹配，匹配到就下发消息到该绑定对应的队列中
     private String bindingKey;
 
     // Binding是依附于 Exchange 和Queue 的
