@@ -9,6 +9,7 @@ import org.apache.ibatis.annotations.Param;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /*
  * 通过这个类，来表示虚拟主机
@@ -261,6 +262,83 @@ public class VirtualHost {
             e.printStackTrace();
             return false;
         }
+    }
+
+    // 发送消息到指定的交换机/队列中
+    public boolean basicPublish(String exchangeName,String routingKey,BasicProperties basicProperties,byte[] body) {
+        try {
+            // 1. 转换交换机的名字
+            exchangeName=virtualHostName+exchangeName;
+            // 2. 检查 routingKey 是否合法
+            if (router.checkRoutingKey(routingKey)) {
+                throw new MqException("[VirtualHost] routingKey 非法！routingKey="+routingKey);
+            }
+            // 3. 查找交换机对象
+            Exchange exchange=memoryDataCenter.getExchange(exchangeName);
+            if (exchange==null) {
+                throw new MqException("[VirtualHost] 交换机不存在！ exchangeName="+exchangeName);
+            }
+            // 4. 判断交换机的类型
+            if(exchange.getType()==ExchangeType.DIRECT) {
+                // 按照直接交换机的方式来转发消息
+                // 以 routingKey 作为队列的名字，直接把消息写入到指定的队列中
+                // 此时 可以无视绑定关系
+                String queueName=virtualHostName+routingKey;
+                // 5. 构造消息对象
+                Message message=Message.createMessageWithId(routingKey, basicProperties, body);
+                // 6. 查找该队列名对应的对象
+                MSGQueue queue=memoryDataCenter.getQueue(queueName);
+                if(queue==null) {
+                    throw new MqException("[VirtualHost] 队列不存在！queueName="+queueName);
+                }
+                // 7. 队列存在，直接给队列中写入消息
+                sendMessage(queue,message);
+            } else {
+                // 按照 fanout 和 topic 的方式来转发
+                // 找到该交换机关联的所有绑定，并遍历这些绑定对象
+                ConcurrentHashMap<String,Binding> bindingsMap=memoryDataCenter.getBindings(exchangeName);
+                for (Map.Entry<String,Binding> entry: bindingsMap.entrySet()) {
+                    // 1) 获取到绑定对象，判定对应的队列是否存在
+                    Binding binding=entry.getValue();
+                    MSGQueue queue=memoryDataCenter.getQueue(binding.getQueueName());
+                    if(queue==null) {
+                        // 此处就不抛出异常了 可能此处有多个这样的队列
+                        // 希望不要因为一个队列的失败，影响到其他队列的消息的传输
+                        log.info("[VirtualHost] basicPublish 发送消息时，发现队列不存在！");
+                        continue;
+                    }
+                    // 2) 构造消息对象
+                    Message message=Message.createMessageWithId(routingKey,basicProperties,body);
+                    // 3) 判定这个消息是否能转发给该队列
+                    //   如果是 fanout, 所有绑定的队列都要转发
+                    //   如果是 topic，还需要判定下，bindingKey 和 routingKey是不是匹配
+                    if(!router.route(exchange.getType(),binding,message)) {
+                        continue;
+                    }
+                    // 4) 真正转发消息给队列
+                    sendMessage(queue,message);
+                }
+            }
+            return true;
+        } catch (Exception e) {
+            log.info("[VirtualHost] 消息发送失败！");
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    private void sendMessage(MSGQueue queue,Message message) throws IOException, MqException {
+        // 此处发送消息，就是把消息写入到 硬盘和内存上
+        int deliverMode=message.getDeliverMode();
+        // deliverMode 为1，不持久化；deliverMode 为2，表示持久化
+        if (deliverMode==2) {
+            diskDataCenter.sendMessage(queue,message);
+        }
+        // 写入内存
+        memoryDataCenter.sendMessage(queue,message);
+
+        // 此处还需要补充一个逻辑，通知消费者可以消息消息了
+
     }
 
 }
