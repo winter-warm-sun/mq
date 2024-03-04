@@ -10,6 +10,7 @@ import org.apache.ibatis.annotations.Param;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 /*
  * 通过这个类，来表示虚拟主机
@@ -341,4 +342,13 @@ public class VirtualHost {
 
     }
 
+    // 订阅消息
+    // 添加一个队列的订阅者，当队列收到消息之后，就要把消息推送给对应的订阅者
+    // consumerTag: 消费者的身份标识
+    // autoAck: 消息被消费完成后，应答的方式：为 true 自动应答，为 false 手动应答
+    // consumer: 是一个回调函数，此处类型设定成函数式接口。这样后续调用 basicConsume 并且传实参的时候，就可以写作 lambda 样子了
+    public boolean basicConsume(String consumerTag, String queueName, boolean autoAck, Consumer consumer) {
+        //
+        return true;
+    }
 }
