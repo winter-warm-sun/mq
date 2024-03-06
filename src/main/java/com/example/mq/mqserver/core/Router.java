@@ -12,7 +12,26 @@ public class Router {
     // 2. 使用 . 分割成若干部分
     // 3. 允许存在 * 和 # 作为通配符，但是通配符只能作为独立的分段
     public boolean checkBindingKey(String bindingKey) {
-        // todo
+        if (bindingKey.length()==0) {
+            // 空字符串也是合法情况
+            return true;
+        }
+        for (int i=0;i<=bindingKey.length();i++) {
+            char ch=bindingKey.charAt(i);
+            if(ch>='A'&&ch<='Z') {
+                continue;
+            }
+            if(ch>='a'&&ch<='z') {
+                continue;
+            }
+            if(ch>='0'&&ch<='9') {
+                continue;
+            }
+            if(ch=='_'||ch=='.'||ch=='*'||ch=='#') {
+                continue;
+            }
+            return false;
+        }
         return true;
     }
 
