@@ -11,6 +11,8 @@ public class Router {
     // 1. 数字，字母，下划线
     // 2. 使用 . 分割成若干部分
     // 3. 允许存在 * 和 # 作为通配符，但是通配符只能作为独立的分段
+    // * 可以匹配任何一个独立的部分
+    // # 可以匹配任何 0个或者多个独立的部分
     public boolean checkBindingKey(String bindingKey) {
         if (bindingKey.length()==0) {
             // 空字符串 也是合法情况,比如在使用 direct/ fanout交换机的时候，bindingKet 是用不上的
@@ -181,8 +183,9 @@ public class Router {
     }
     private  int findNextMatch(String[] routingTokens,int routingIndex,String bindingToken) {
         for (int i=routingIndex;i<routingTokens.length;i++) {
-            if (routingTokens[i].equals(bindingToken));
-            return i;
+            if (routingTokens[i].equals(bindingToken)) {
+                return i;
+            }
         }
         return -1;
     }
