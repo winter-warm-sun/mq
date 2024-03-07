@@ -1,5 +1,6 @@
 package com.example.mq.mqserver.core;
 
+import com.example.mq.common.Consumer;
 import com.example.mq.common.ConsumerEnv;
 import com.example.mq.common.MqException;
 import com.example.mq.mqserver.VirtualHost;
@@ -50,6 +51,29 @@ public class ConsumerManager {
         // 把线程设为后台线程
         scannerThread.setDaemon(true);
         scannerThread.start();
+    }
+
+    // 这个方法的调用时机就是发送消息的时候
+    public void notifyConsume(String queueName) throws InterruptedException {
+        tokenQueue.put(queueName);
+    }
+
+    public void addConsumer(String consumerTag, String queueName, boolean autoAck, Consumer consumer) throws MqException {
+        // 找到对应的队列
+        MSGQueue queue=parent.getMemoryDataCenter().getQueue(queueName);
+        if (queue==null) {
+            throw new MqException("[ConsumerManger] 队列不存在！ queueName="+queueName);
+        }
+        ConsumerEnv consumerEnv=new ConsumerEnv(consumerTag,queueName,autoAck,consumer);
+        synchronized (queue) {
+            queue.addConsumerEnv(consumerEnv);
+            // 如果当前队列中已经有了一些消息了，需要立即就消费掉
+            int n=parent.getMemoryDataCenter().getMessageCount(queueName);
+            for (int i = 0; i < n; i++) {
+                // 这个方法调用一次就消费一条消息
+                consumeMessage(queue);
+            }
+        }
     }
 
     private void consumeMessage(MSGQueue queue) {
