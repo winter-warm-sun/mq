@@ -1,16 +1,15 @@
 package com.example.mq.mqserver;
 
+import com.example.mq.common.Consumer;
 import com.example.mq.common.MqException;
 import com.example.mq.mqserver.core.*;
 import com.example.mq.mqserver.datacenter.DiskDataCenter;
 import com.example.mq.mqserver.datacenter.MemoryDataCenter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.ibatis.annotations.Param;
 
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
 
 /*
  * 通过这个类，来表示虚拟主机
@@ -24,6 +23,8 @@ public class VirtualHost {
     private MemoryDataCenter memoryDataCenter=new MemoryDataCenter();
     private DiskDataCenter diskDataCenter=new DiskDataCenter();
     private Router router=new Router();
+
+    private ConsumerManager consumerManager=new ConsumerManager(this);
 
     // 操作交换机的锁对象
     private final Object exchangeLocker=new Object();
@@ -191,7 +192,7 @@ public class VirtualHost {
     // 增加绑定
     public boolean queueBind(String queueName,String exchangeName,String bindingKey) {
         queueName=virtualHostName+queueName;
-        exchangeName=virtualHostName+queueName;
+        exchangeName=virtualHostName+exchangeName;
         try {
             synchronized (exchangeLocker) {
                 synchronized (queueLocker) {
@@ -271,7 +272,7 @@ public class VirtualHost {
             // 1. 转换交换机的名字
             exchangeName=virtualHostName+exchangeName;
             // 2. 检查 routingKey 是否合法
-            if (router.checkRoutingKey(routingKey)) {
+            if (!router.checkRoutingKey(routingKey)) {
                 throw new MqException("[VirtualHost] routingKey 非法！routingKey="+routingKey);
             }
             // 3. 查找交换机对象
@@ -328,7 +329,7 @@ public class VirtualHost {
         }
     }
 
-    private void sendMessage(MSGQueue queue,Message message) throws IOException, MqException {
+    private void sendMessage(MSGQueue queue,Message message) throws IOException, MqException, InterruptedException {
         // 此处发送消息，就是把消息写入到 硬盘和内存上
         int deliverMode=message.getDeliverMode();
         // deliverMode 为1，不持久化；deliverMode 为2，表示持久化
@@ -339,7 +340,7 @@ public class VirtualHost {
         memoryDataCenter.sendMessage(queue,message);
 
         // 此处还需要补充一个逻辑，通知消费者可以消息消息了
-
+        consumerManager.notifyConsume(queue.getName());
     }
 
     // 订阅消息
@@ -348,7 +349,47 @@ public class VirtualHost {
     // autoAck: 消息被消费完成后，应答的方式：为 true 自动应答，为 false 手动应答
     // consumer: 是一个回调函数，此处类型设定成函数式接口。这样后续调用 basicConsume 并且传实参的时候，就可以写作 lambda 样子了
     public boolean basicConsume(String consumerTag, String queueName, boolean autoAck, Consumer consumer) {
-        //
-        return true;
+        // 构造一个 ConsumerEnv 对象，把这个对应的队列找到，再把这个 Consumer 对象添加到该队列中
+        queueName=virtualHostName+queueName;
+        try {
+            consumerManager.addConsumer(consumerTag,queueName,autoAck,consumer);
+            log.info("[VirtualHost] basicConsume 成功！ queueName="+queueName);
+            return true;
+        } catch (Exception e) {
+            log.info("[VirtualHost] basicConsume 失败！ queueName="+queueName);
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean basicAck(String queueName,String messageId) {
+        queueName=virtualHostName+queueName;
+        try {
+            // 1. 获取到消息和队列
+            Message message=memoryDataCenter.getMessage(messageId);
+            if(message==null) {
+                throw new MqException("[VirtualHost] 要确认的消息不存在! messageId="+messageId);
+            }
+            MSGQueue queue=memoryDataCenter.getQueue(queueName);
+            if(queue==null) {
+                throw new MqException("[VirtualHost] 要确认的队列不存在！queueName="+queueName);
+            }
+            // 2. 删除硬盘上的数据
+            if (message.getDeliverMode()==2) {
+               diskDataCenter.deleteMessage(queue,message);
+            }
+            // 3. 删除消息中心中的数据
+            memoryDataCenter.removeMessage(messageId);
+            // 4. 删除待确认的集合中的数据
+            memoryDataCenter.removeMessageWaitAck(queueName,messageId);
+            log.info("[VirtualHost] basicAck 成功！消息被成功确认！ queueName="+queueName
+            +", messageId="+messageId);
+            return true;
+        } catch (Exception e) {
+            log.info("[VirtualHost] basicAck 失败！消息确认失败！ queueName="+queueName
+            +", messageId"+ messageId);
+            e.printStackTrace();
+            return false;
+        }
     }
 }

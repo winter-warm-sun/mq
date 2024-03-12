@@ -19,7 +19,7 @@ public class Router {
             return true;
         }
         // 检查字符串中不能存在非法字符
-        for (int i=0;i<=bindingKey.length();i++) {
+        for (int i=0;i<bindingKey.length();i++) {
             char ch=bindingKey.charAt(i);
             if(ch>='A'&&ch<='Z') {
                 continue;
