@@ -1,5 +1,6 @@
 package com.example.mq.mqclient;
 
+import com.example.mq.arguments.BasicAckArguments;
 import com.example.mq.common.Consumer;
 import com.example.mq.returns.BasicReturns;
 
@@ -20,5 +21,10 @@ public class Channel {
         this.connection=connection;
     }
 
+    // 在这个方法中，和服务器进行交互，告知服务器，此处客户端创建了新的 channel了
+    public boolean createChannel() {
+        // 对于创建 Channel 操作来说，payload 就是一个 basicArguments 对象
+        BasicAckArguments basicAckArguments=new BasicAckArguments();
 
+    }
 }
