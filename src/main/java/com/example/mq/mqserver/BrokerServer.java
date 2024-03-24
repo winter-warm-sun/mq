@@ -62,6 +62,15 @@ public class BrokerServer {
         }
     }
 
+    // 一般来说停止服务器，就是直接kill掉对应进程就行了
+    // 此处写一个单独的停止方法，主要用于单元测试
+    public void stop() throws IOException {
+        runnable=false;
+        // 把线程池中的任务都放弃了，让线程都销毁
+        executorService.shutdown();
+        serverSocket.close();
+    }
+
     // 通过这个方法，来处理一个客户端的连接
     // 在这一个连接中，可能会涉及到多个请求和响应
     private void processConnection(Socket clientSocket) {
