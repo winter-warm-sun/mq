@@ -151,4 +151,11 @@ public class RouterTests {
         message.setRoutingKey("ccc");
         Assertions.assertTrue(router.route(ExchangeType.TOPIC,binding,message));
     }
+
+    @Test
+    public void test16() throws MqException {
+        binding.setBindingKey("#.ccc");
+        message.setRoutingKey("aaa.bbb.ccc");
+        Assertions.assertTrue(router.route(ExchangeType.TOPIC,binding,message));
+    }
 }
