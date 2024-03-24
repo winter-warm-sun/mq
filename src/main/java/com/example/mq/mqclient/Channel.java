@@ -34,10 +34,10 @@ public class Channel {
     // 在这个方法中，和服务器进行交互，告知服务器，此处客户端创建了新的 channel了
     public boolean createChannel() throws IOException {
         // 对于创建 Channel 操作来说，payload 就是一个 basicArguments 对象
-        BasicAckArguments basicAckArguments=new BasicAckArguments();
-        basicAckArguments.setChannelId(channelId);
-        basicAckArguments.setRid(generateRid());
-        byte[] payload= BinaryTool.toBytes(basicAckArguments);
+        BasicArguments basicArguments=new BasicArguments();
+        basicArguments.setChannelId(channelId);
+        basicArguments.setRid(generateRid());
+        byte[] payload= BinaryTool.toBytes(basicArguments);
 
         Request request=new Request();
         request.setType(0x1);
@@ -47,7 +47,7 @@ public class Channel {
         // 构造出完整请求之后，就可以发送这个请求了
         connection.writeRequest(request);
         // 等待服务器的响应
-        BasicReturns basicReturns=waitResult(basicAckArguments.getRid());
+        BasicReturns basicReturns=waitResult(basicArguments.getRid());
         return basicReturns.isOk();
     }
 
@@ -125,11 +125,12 @@ public class Channel {
 
     // 删除交换机
     public boolean exchangeDelete(String exchangeName) throws IOException {
-        ExchangeDeclareArguments arguments=new ExchangeDeclareArguments();
+        ExchangeDeleteArguments arguments=new ExchangeDeleteArguments();
         arguments.setRid(generateRid());
         arguments.setChannelId(channelId);
         arguments.setExchangeName(exchangeName);
         byte[] payload=BinaryTool.toBytes(arguments);
+
         Request request=new Request();
         request.setType(0x4);
         request.setLength(payload.length);
