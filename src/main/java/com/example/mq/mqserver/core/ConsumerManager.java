@@ -44,7 +44,7 @@ public class ConsumerManager {
                         consumeMessage(queue);
                     }
                 } catch (InterruptedException | MqException e) {
-                    throw new RuntimeException(e);
+                    e.printStackTrace();
                 }
             }
         });
@@ -84,7 +84,7 @@ public class ConsumerManager {
             return;
         }
         // 2. 从队列中取出一个消息
-        Message message=parent.getMemoryDataCenter().getMessage(queue.getName());
+        Message message=parent.getMemoryDataCenter().pollMessage(queue.getName());
         if (message==null) {
             // 当前队列中还没有消息，也不需要消费
             return;
